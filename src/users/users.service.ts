@@ -34,12 +34,11 @@ export class UsersService {
     await this.userRepository.update(userID, updateDto);
     return this.findOne(userID);
   }
-  async remove(userID: number): Promise<User[]> {
+  async remove(userID: number): Promise<void> {
     const result = await this.userRepository.delete(userID);
     if (result.affected === 0) {
       throw new NotFoundException(`User with ID ${userID} not found`);
     }
-    return await this.userRepository.find();
   }
 
   async findByEmail(email: string): Promise<User | null> {

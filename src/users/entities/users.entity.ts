@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity() // describing a database table.
@@ -10,6 +11,7 @@ export class User {
   })
   email: string;
 
+  @Exclude()
   @Column()
   password: string;
 }
