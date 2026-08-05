@@ -17,21 +17,27 @@ export class AuthService {
       throw new ConflictException(
         `The email, ${registerDto.email} already exists`,
       );
+      
     }
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
     const userData = {
       email: registerDto.email,
       password: hashedPassword,
+      username: registerDto.username,
     };
     const createdUser = await this.usersService.create(userData);
 
-    return createdUser;
+    return {
+      id: createdUser.id,
+      username: createdUser.username,
+      email: createdUser.email,
+    };
   }
 
   async login(user: User) {
     const payload = {
       sub: user.id,
-      username: user.email,
+      username: user.username,
     };
 
     return {
