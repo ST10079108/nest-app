@@ -17,7 +17,6 @@ export class AuthService {
       throw new ConflictException(
         `The email, ${registerDto.email} already exists`,
       );
-      
     }
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
     const userData = {
@@ -38,10 +37,14 @@ export class AuthService {
     const payload = {
       sub: user.id,
       username: user.username,
+      role: user.role,
     };
 
     return {
       access_token: await this.jwtService.signAsync(payload),
+      id: user.id,
+      email: user.email,
+      role: user.role,
     };
   }
 

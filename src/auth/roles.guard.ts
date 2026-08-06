@@ -1,30 +1,7 @@
-// import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
-// import { Reflector } from '@nestjs/core';
-// import { Role } from './roles.enum';
-// import { ROLES_KEY } from './roles.decorator';
-
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-
-// @Injectable()
-// export class RolesGuard implements CanActivate {
-//   constructor(private reflector: Reflector) {}
-
-//   canActivate(context: ExecutionContext): boolean {
-//     const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
-//       context.getHandler(),
-//       context.getClass(),
-//     ]);
-//     if (!requiredRoles) {
-//       return true;
-//     }
-//     const { user } = context.switchToHttp().getRequest();
-//     if (!user) {
-//       return false;
-//     }
-//     return requiredRoles.includes(user.role);
-//   }
-//
+import { Role } from './roles.enum';
+import { ROLES_KEY } from './roles.decorator';
 
 @Injectable()
 export class RoleGuard implements CanActivate {
@@ -35,12 +12,17 @@ export class RoleGuard implements CanActivate {
   }
 
   canActivate(context: ExecutionContext): boolean {
-    const roles = this.reflector.get<string[]>('roles', context.getHandler());
+    const roles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    console.log('Required roles:', roles);
     if (!roles) {
       return true;
     }
     const request = context.switchToHttp().getRequest();
     const user = request.user;
-    return this.matchRoles(roles, user.role);
+    // return this.matchRoles(roles, user.role);
+    return roles.includes(user.role);
   }
 }
