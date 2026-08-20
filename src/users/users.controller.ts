@@ -1,4 +1,4 @@
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/users.entity';
 import { UsersService } from './users.service';
@@ -16,9 +16,9 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ParseIntPipe } from '@nestjs/common';
-import { Roles } from 'src/auth/roles.decorator';
-import { Role } from 'src/auth/roles.enum';
-import { RoleGuard } from 'src/auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { Role } from '../auth/roles.enum';
+import { RoleGuard } from '../auth/roles.guard';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @UseGuards(JwtAuthGuard, RoleGuard)
