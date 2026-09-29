@@ -48,6 +48,10 @@ export class AuthService {
     };
   }
 
+  async getProfile(user: User) {
+    return this.usersService.findOne(user.id);
+  }
+
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.usersService.findByEmail(email);
     if (!user) {

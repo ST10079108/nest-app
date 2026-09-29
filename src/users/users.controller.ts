@@ -14,11 +14,13 @@ import {
   Put,
   UseGuards,
   UseInterceptors,
+  Request,
 } from '@nestjs/common';
 import { ParseIntPipe } from '@nestjs/common';
 import { Roles } from '../auth/roles.decorator';
 import { Role } from '../auth/roles.enum';
 import { RoleGuard } from '../auth/roles.guard';
+import type { AuthenticatedUser } from 'src/auth/jwt.strategy';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @UseGuards(JwtAuthGuard, RoleGuard)
@@ -39,12 +41,13 @@ export class UsersController {
   }
 
   @Put(':id')
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.USER)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateDto: UpdateUserDto,
+    @Request() req: { user: AuthenticatedUser },
   ): Promise<User> {
-    return this.usersService.update(id, updateDto);
+    return this.usersService.update(id, updateDto, req.user);
   }
 
   @Delete(':id')

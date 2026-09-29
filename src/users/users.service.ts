@@ -1,8 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { User } from './entities/users.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Role } from 'src/auth/roles.enum';
+import { AuthenticatedUser } from 'src/auth/jwt.strategy';
 
 @Injectable()
 export class UsersService {
@@ -30,8 +36,22 @@ export class UsersService {
     return this.userRepository.save(user);
   }
 
-  async update(userID: number, updateDto: UpdateUserDto): Promise<User> {
+  async update(
+    userID: number,
+    updateDto: UpdateUserDto,
+    user: AuthenticatedUser,
+  ): Promise<User> {
+    await this.findOne(userID);
+
+    const isAdmin = user.role === Role.ADMIN;
+    const isOwner = user.id === userID;
+
+    if (!isAdmin && !isOwner) {
+      throw new ForbiddenException('You can only update your own profile');
+    }
+
     await this.userRepository.update(userID, updateDto);
+
     return this.findOne(userID);
   }
   async remove(userID: number): Promise<void> {

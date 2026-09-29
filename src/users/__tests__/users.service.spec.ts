@@ -1,17 +1,41 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { Repository } from 'typeorm';
+import { Role } from '../../auth/roles.enum';
 import { User } from '../entities/users.entity';
 import { UsersService } from '../users.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { NotFoundException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 
 describe('UsersService', () => {
   let service: UsersService;
   let repository: jest.Mocked<Repository<User>>;
 
   const users = [
-    { id: 1, username: 'user1', email: 'mail@test.com', role: 'user' },
-    { id: 2, username: 'user2', email: 'mail@test.com', role: 'admin' },
+    {
+      id: 1,
+      username: 'user1',
+      email: 'user1@test.com',
+      password: 'password12345',
+      role: Role.ADMIN,
+      bio: '',
+      avatarUrl: '',
+      isActive: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      id: 2,
+      username: 'user2',
+      email: 'user2@test.com',
+      password: 'password12345',
+      role: Role.USER,
+      bio: '',
+      avatarUrl: '',
+      isActive: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
   ];
 
   beforeEach(async () => {
@@ -39,7 +63,7 @@ describe('UsersService', () => {
 
   describe('find', () => {
     it('should return all users', async () => {
-      repository.find.mockResolvedValue(users as User[]);
+      repository.find.mockResolvedValue(users);
       const result = await service.findAll();
       expect(result).toEqual(users);
     }); // mockResolvedValue(value), "Whenever this function is called, return this value."
@@ -47,9 +71,7 @@ describe('UsersService', () => {
 
   describe('findOne', () => {
     it('should return one user', async () => {
-      repository.findOneBy.mockImplementation(async ({ id }) => {
-        return users.find((user) => user.id === id) as User;
-      }); // mockImplementation(fn), "Whenever this function is called, run this function."
+      repository.findOneBy.mockResolvedValue(users[0]);
 
       const result = await service.findOne(1);
 
@@ -67,7 +89,7 @@ describe('UsersService', () => {
   });
 
   describe('update', () => {
-    it('should update the user', async () => {
+    it('should allow a user to update their own profile', async () => {
       repository.update.mockResolvedValue({
         affected: 1,
       } as any);
@@ -75,16 +97,62 @@ describe('UsersService', () => {
       repository.findOneBy.mockResolvedValue({
         ...users[0],
         username: 'updatedUser',
-      } as User);
+      });
 
       const updateDto = {
         username: 'updatedUser',
       };
 
-      const result = await service.update(1, updateDto);
+      const result = await service.update(1, updateDto, {
+        id: 1,
+        email: 'user1@test.com',
+        role: Role.USER,
+      });
 
       expect(repository.update).toHaveBeenCalledWith(1, updateDto);
       expect(result.username).toBe('updatedUser');
+    });
+
+    it('should allow an admin to update another user', async () => {
+      repository.update.mockResolvedValue({
+        affected: 1,
+      } as any);
+
+      repository.findOneBy.mockResolvedValue({
+        ...users[1],
+        username: 'updatedUser',
+      });
+
+      const updateDto = {
+        username: 'updatedUser',
+      };
+
+      const result = await service.update(2, updateDto, {
+        id: 1,
+        email: 'user1@test.com',
+        role: Role.ADMIN,
+      });
+
+      expect(repository.update).toHaveBeenCalledWith(1, updateDto);
+      expect(result.username).toBe('updatedUser');
+    });
+
+    it('should reject a user updating another user', async () => {
+      repository.findOneBy.mockResolvedValue(users[0]);
+
+      const updateDto = {
+        username: 'updatedUser',
+      };
+
+      await expect(
+        service.update(1, updateDto, {
+          id: 2,
+          email: 'user2@test.com',
+          role: Role.USER,
+        }),
+      ).rejects.toThrow(ForbiddenException);
+
+      expect(repository.update).not.toHaveBeenCalled();
     });
   });
 });

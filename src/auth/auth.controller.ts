@@ -6,6 +6,7 @@ import {
   Post,
   UseGuards,
   Request,
+  Get,
 } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
 import { AuthService } from './auth.service';
@@ -24,5 +25,10 @@ export class AuthController {
   @Post('login')
   login(@Request() req) {
     return this.authService.login(req.user);
+  }
+
+  @Get('profile')
+  getProfile(@Request() req) {
+    return this.authService.getProfile(req.user);
   }
 }
